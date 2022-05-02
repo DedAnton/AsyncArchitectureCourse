@@ -10,4 +10,4 @@ app.UseSwaggerUI();
 
 
 
-app.Run();
+app.Run($"http://localhost:5002");
