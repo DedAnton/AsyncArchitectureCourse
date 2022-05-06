@@ -4,24 +4,12 @@
 
 ## Event storming
 
-![event storming](/Images/1.png)
+![Event storming](/Images/homework-1-upd/1.png)
 
-## модель данных
+## Модель данных
 
-![модель данных](/Images/2.png)
+![Модель данных](/Images/homework-1-upd/2.png)
 
-## домены
+## Сервисы
 
-![домены](/Images/3.png)
-
-## Поправил event storming 
-
-![Поправил event storming ](/Images/4.png)
-
-## Асинхронные коммуникации
-
-![Асинхронные коммуникации](/Images/6.png)
-
-## Синхронные коммуникации
-
-![Синхронные коммуникации](/Images/5.png)
+![Сервисы](/Images/homework-1-upd/3.png)
