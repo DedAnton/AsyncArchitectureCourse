@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -13,11 +13,14 @@
 		<PackageReference Include="KafkaFlow.Serializer" Version="2.2.4" />
 		<PackageReference Include="KafkaFlow.Serializer.JsonCore" Version="2.2.4" />
 		<PackageReference Include="KafkaFlow.TypedHandler" Version="2.2.4" />
-		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="6.0.4" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
 		<PackageReference Include="linq2db.SqlServer" Version="3.7.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.17.0" />
 	</ItemGroup>
 
 </Project>
