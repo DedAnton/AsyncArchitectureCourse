@@ -29,7 +29,7 @@ public static class DI
         });
     }
 
-    public static void AddSwagger(this IServiceCollection services)
+    public static void AddMySwagger(this IServiceCollection services)
     {
         var securityScheme = new OpenApiSecurityScheme()
         {
@@ -70,7 +70,7 @@ public static class DI
         app.UseAuthorization();
     }
 
-    public static void UseSwagger(this IApplicationBuilder app)
+    public static void UseMySwagger(this IApplicationBuilder app)
     {
         app.UseSwagger();
         app.UseSwaggerUI();
