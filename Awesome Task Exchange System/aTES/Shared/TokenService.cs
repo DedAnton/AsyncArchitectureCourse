@@ -14,4 +14,20 @@ public static class TokenService
         return new SymmetricSecurityKey(Encoding.ASCII.GetBytes(KEY));
     }
 
+    public static string BuildToken(User user)
+    {
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim("id", user.Id.ToString()),
+            new Claim(ClaimTypes.Role, user.Role)
+        };
+
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(KEY));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
+        var tokenDescriptor = new JwtSecurityToken(claims: claims, signingCredentials: credentials);
+        return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+    }
+
+    public static Guid GetId(this ClaimsPrincipal user) => Guid.Parse(user.FindFirst("id")!.Value);
 }
