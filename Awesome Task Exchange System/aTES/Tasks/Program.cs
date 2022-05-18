@@ -24,7 +24,7 @@ app.MapGet("/tasks", [Authorize(Roles = "Worker")] async (ClaimsPrincipal user) 
     var userId = user.GetId();
     var task = await db.Tasks
         .Where(x => x.Assigned == userId)
-        .Select(x => new { x.Id, x.Name, x.Description, x.Status, x.Assigned })
+        .Select(x => new { x.Id, x.JiraId, x.Name, x.Description, x.Status, x.Assigned })
         .ToListAsync();
     return Results.Ok(task);
 });
@@ -32,9 +32,17 @@ app.MapGet("/tasks", [Authorize(Roles = "Worker")] async (ClaimsPrincipal user) 
 app.MapPost("/tasks", [Authorize] async (TesTask newTask) =>
 {
     using var db = new DbTasks();
-    newTask = new TesTask { Id = newTask.Id, Name = newTask.Name, Description = newTask.Description, Status = TesTaskStatus.InProgress, Assigned = GetRandomWorker() };
+    if (newTask.Name.Contains('[') || newTask.Name.Contains(']'))
+    {
+        Results.BadRequest("do not use [jira-id] in name, use property jiraId");
+    }
+    if (string.IsNullOrWhiteSpace(newTask.JiraId))
+    {
+        Results.BadRequest("jiraId must be specified");
+    }
+    newTask = new TesTask { Id = newTask.Id, JiraId = newTask.JiraId, Name = newTask.Name, Description = newTask.Description, Status = TesTaskStatus.InProgress, Assigned = GetRandomWorker() };
     await db.InsertAsync(newTask);
-    await ProduceEventAsync(new NewTaskCreated(newTask));
+    await ProduceEventAsync(new NewTaskCreatedV2(newTask));
     await ProduceEventAsync(new TaskAssigned(newTask.Id, newTask.Assigned));
     await ProduceEventAsync(new StreamingEvent<TesTask>(newTask));
 

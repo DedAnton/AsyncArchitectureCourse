@@ -43,7 +43,7 @@ public class UserEventsHandler : IMessageHandler<StreamingEvent<User>>
     }
 }
 
-public class TaskEventsHandler : IMessageHandler<StreamingEvent<TesTask>>, IMessageHandler<NewTaskCreated>, IMessageHandler<TaskAssigned>, IMessageHandler<TaskCompleted>
+public class TaskEventsHandler : IMessageHandler<StreamingEvent<TesTask>>, IMessageHandler<NewTaskCreated>, IMessageHandler<NewTaskCreatedV2>, IMessageHandler<TaskAssigned>, IMessageHandler<TaskCompleted>
 {
     private readonly IMessageProducer _taskProducer;
     private readonly IMessageProducer _transactionProducer;
@@ -58,8 +58,8 @@ public class TaskEventsHandler : IMessageHandler<StreamingEvent<TesTask>>, IMess
     {
         using var db = new DbAccounting();
         await db.Tasks.InsertOrUpdateAsync(
-            () => new TesTask { Id = taskUpdate.Data.Id, Name = taskUpdate.Data.Name, Description = taskUpdate.Data.Description, Status = taskUpdate.Data.Status, Assigned = taskUpdate.Data.Assigned },
-            x => new TesTask { Id = x.Id, Name = taskUpdate.Data.Name, Description = taskUpdate.Data.Description, Status = taskUpdate.Data.Status, Assigned = taskUpdate.Data.Assigned });
+            () => new TesTask { Id = taskUpdate.Data.Id, JiraId = taskUpdate.Data.JiraId, Name = taskUpdate.Data.Name, Description = taskUpdate.Data.Description, Status = taskUpdate.Data.Status, Assigned = taskUpdate.Data.Assigned },
+            x => new TesTask { Id = x.Id, JiraId = taskUpdate.Data.JiraId, Name = taskUpdate.Data.Name, Description = taskUpdate.Data.Description, Status = taskUpdate.Data.Status, Assigned = taskUpdate.Data.Assigned });
     }
 
     public async Task Handle(IMessageContext context, NewTaskCreated message)
@@ -69,7 +69,19 @@ public class TaskEventsHandler : IMessageHandler<StreamingEvent<TesTask>>, IMess
         var reward = random.Next(20, 41);
         var fee = random.Next(10, 21);
         await db.Tasks.InsertOrUpdateAsync(
-            () => new TesTask { Id = message.TaskId, Name = message.Name, Description = message.Description, Status = message.Status, Assigned = message.Assigned, Reward = reward, Fee = fee},
+            () => new TesTask { Id = message.TaskId, JiraId = "", Name = message.Name, Description = message.Description, Status = message.Status, Assigned = message.Assigned, Reward = reward, Fee = fee},
+            x => new TesTask { Id = x.Id, Reward = reward, Fee = fee });
+        await _taskProducer.ProduceAsync(DateTime.UtcNow.Ticks.ToString(), new TaskEstimated(message.TaskId, reward, fee));
+    }
+
+    public async Task Handle(IMessageContext context, NewTaskCreatedV2 message)
+    {
+        using var db = new DbAccounting();
+        var random = new Random();
+        var reward = random.Next(20, 41);
+        var fee = random.Next(10, 21);
+        await db.Tasks.InsertOrUpdateAsync(
+            () => new TesTask { Id = message.TaskId, JiraId = message.JiraId, Name = message.Name, Description = message.Description, Status = message.Status, Assigned = message.Assigned, Reward = reward, Fee = fee },
             x => new TesTask { Id = x.Id, Reward = reward, Fee = fee });
         await _taskProducer.ProduceAsync(DateTime.UtcNow.Ticks.ToString(), new TaskEstimated(message.TaskId, reward, fee));
     }
@@ -104,7 +116,7 @@ public class TaskEventsHandler : IMessageHandler<StreamingEvent<TesTask>>, IMess
             task = await db.Tasks.FirstOrDefaultAsync(x => x.Id == taskId);
         }
 
-        var reason = $"User assigned to task {taskId}: {task.Name}.\r\n{task.Description}.";
+        var reason = $"User assigned to task {taskId}: [{task.JiraId}] {task.Name}.\r\n{task.Description}.";
         var transaction = new Transaction { Id = Guid.NewGuid(), User = userId, Reason = reason, Debit = 0, Credit = task.Fee.Value, CreatedAt = DateTimeOffset.UtcNow };
         await db.InsertAsync(transaction);
         await _transactionProducer.ProduceAsync(DateTime.UtcNow.Ticks.ToString(), new StreamingEvent<Transaction>(transaction));
@@ -122,7 +134,7 @@ public class TaskEventsHandler : IMessageHandler<StreamingEvent<TesTask>>, IMess
             task = await db.Tasks.FirstOrDefaultAsync(x => x.Id == taskId);
         }
 
-        var reason = $"User complete task {taskId}: {task.Name}.\r\n{task.Description}.";
+        var reason = $"User complete task {taskId}: [{task.JiraId}] {task.Name}.\r\n{task.Description}.";
         var transaction = new Transaction { Id = Guid.NewGuid(), User = task.Assigned, Reason = reason, Debit = task.Reward.Value, Credit = 0, CreatedAt = DateTimeOffset.UtcNow };
         await db.InsertAsync(transaction);
         await _transactionProducer.ProduceAsync(DateTime.UtcNow.Ticks.ToString(), new StreamingEvent<Transaction>(transaction));

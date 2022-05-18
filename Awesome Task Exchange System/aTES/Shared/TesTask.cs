@@ -6,6 +6,7 @@ namespace Shared;
 public class TesTask
 {
     public Guid Id { get; set; }
+    public string JiraId { get; set; } = "";
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public TesTaskStatus Status { get; set; }
