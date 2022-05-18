@@ -59,7 +59,7 @@ app.Run($"http://localhost:5001");
 
 public class DbAuthorization : LinqToDB.Data.DataConnection
 {
-    public DbAuthorization() : base(ProviderName.SqlServer, @"Server=ANTON-PC\SQLEXPRESS;Database=Authorization;Trusted_Connection=True;Enlist=False;", CreateMappingSchema()) { }
+    public DbAuthorization() : base(ProviderName.SqlServer2019, @"Server=ANTON-PC\SQLEXPRESS;Database=Authorization;Trusted_Connection=True;TrustServerCertificate=True;Enlist=False;", CreateMappingSchema()) { }
 
     private static MappingSchema CreateMappingSchema()
     {
@@ -73,5 +73,5 @@ public class DbAuthorization : LinqToDB.Data.DataConnection
         return mappingSchema;
     }
 
-    public ITable<User> Users => GetTable<User>();
+    public ITable<User> Users => this.GetTable<User>();
 }

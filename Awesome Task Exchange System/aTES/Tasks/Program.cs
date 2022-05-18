@@ -1,6 +1,3 @@
-using LinqToDB.Mapping;
-using System.Security.Claims;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddKafka(kafka => kafka
@@ -37,9 +34,9 @@ app.MapPost("/tasks", [Authorize] async (TesTask newTask) =>
     using var db = new DbTasks();
     newTask = new TesTask { Id = newTask.Id, Name = newTask.Name, Description = newTask.Description, Status = TesTaskStatus.InProgress, Assigned = GetRandomWorker() };
     await db.InsertAsync(newTask);
-    await ProduceEventAsync(new StreamingEvent<TesTask>(newTask));
     await ProduceEventAsync(new NewTaskCreated(newTask));
     await ProduceEventAsync(new TaskAssigned(newTask.Id, newTask.Assigned));
+    await ProduceEventAsync(new StreamingEvent<TesTask>(newTask));
 
     return Results.Ok();
 });
@@ -79,6 +76,10 @@ app.MapPost("/tasks/shuffle", [Authorize(Roles = "Manager,Admin")] async () =>
     foreach(var task in tasks)
     {
         var assign = GetRandomWorker();
+        if (task.Assigned == assign)
+        {
+            continue;
+        }
         task.Assigned = assign;
         await db.Tasks
             .Where(x => x.Id == task.Id)
@@ -126,7 +127,7 @@ public class UserEventsHandler : IMessageHandler<StreamingEvent<User>>
 
 public class DbTasks : LinqToDB.Data.DataConnection
 {
-    public DbTasks() : base(ProviderName.SqlServer, @"Server=ANTON-PC\SQLEXPRESS;Database=Tasks;Trusted_Connection=True;Enlist=False;", CreateMappingSchema()) { }
+    public DbTasks() : base(ProviderName.SqlServer2019, @"Server=ANTON-PC\SQLEXPRESS;Database=Tasks;Trusted_Connection=True;TrustServerCertificate=True;Enlist=False;", CreateMappingSchema()) { }
 
     private static MappingSchema CreateMappingSchema()
     {
@@ -140,12 +141,12 @@ public class DbTasks : LinqToDB.Data.DataConnection
         builder.Entity<TesTask>()
             .HasTableName("Task")
             .HasPrimaryKey(x => x.Id)
-            .Ignore(x => x.Deposit)
+            .Ignore(x => x.Reward)
             .Ignore(x => x.Fee);
 
         return mappingSchema;
     }
 
-    public ITable<TesTask> Tasks => GetTable<TesTask>();
-    public ITable<User> TaskUser => GetTable<User>();
+    public ITable<TesTask> Tasks => this.GetTable<TesTask>();
+    public ITable<User> TaskUser => this.GetTable<User>();
 }

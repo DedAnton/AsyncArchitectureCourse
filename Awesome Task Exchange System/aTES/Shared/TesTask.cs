@@ -10,7 +10,7 @@ public class TesTask
     public string Description { get; set; } = "";
     public TesTaskStatus Status { get; set; }
     public Guid Assigned { get; set; }
-    public float? Deposit { get; set; }
+    public float? Reward { get; set; }
     public float? Fee { get; set; }
 }
 

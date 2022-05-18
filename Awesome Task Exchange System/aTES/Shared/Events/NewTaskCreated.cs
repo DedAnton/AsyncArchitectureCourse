@@ -8,6 +8,8 @@ public class NewTaskCreated : Event
     public TesTaskStatus Status { get; set; }
     public Guid Assigned { get; set; }
 
+    public NewTaskCreated() : base() { }
+
     public NewTaskCreated(TesTask newTask) 
         : base()
     {
